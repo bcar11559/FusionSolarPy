@@ -626,7 +626,7 @@ class FusionSolarClient:
             devices += [dict(type=device["mocTypeName"], deviceDn=device["dn"])]
         return devices
     @logged_in
-    def get_historical_data(self, signal_ids: list[str] = ['30014', '30016', '30017'], device_dn:str = None, date: datetime = datetime.now() ) -> dict:
+    def get_historical_data(self, query_time, signal_ids: list[str] = ['30014', '30016', '30017'], device_dn:str = None, date: datetime = datetime.now() ) -> dict:
         """retrieves historical data for specified signals and device
             possible signal_ids:
             30017 : produced DC in kW
@@ -644,7 +644,7 @@ class FusionSolarClient:
 
         params += (
             ("deviceDn", device_dn),  #
-            ("date", int(date.timestamp() * 1000)),
+            ("date", query_time), #int(date.timestamp() * 1000)),
             ("_", round(time.time() * 1000)),
         )
         r = self._session.get(url=url, params=params)
@@ -846,7 +846,7 @@ class FusionSolarClient:
     @logged_in
     def active_power_control(self, power_setting) -> None:
         """apply active power control.
-        This can be usefull when electrity prices are
+        This can be useful when electrity prices are
         negative (sunny summer holiday) and you want
         to limit the power that is exported into the grid"""
         power_setting_options = {
@@ -1002,17 +1002,17 @@ class FusionSolarClient:
             return {"time": datetime.now().strftime("%Y-%m-%d %H:%M"), "value": None}
 
     def _get_day_start_sec(self) -> int:
-        """Return the start of the current day in seconds since
-           epoche.
+        """Return the start of the current day in milliseconds since the
+           epoch.
 
-        :return: The start of the day ("00:00:00") in seconds
+        :return: The start of the day ("00:00:00") in milliseconds
         :rtype: int
         """
         start_today = time.strftime("%Y-%m-%d 00:00:00", time.gmtime())
         struct_time = time.strptime(start_today, "%Y-%m-%d %H:%M:%S")
-        seconds = round(time.mktime(struct_time) * 1000)
+        millisecs = round(time.mktime(struct_time) * 1000)
 
-        return seconds
+        return millisecs
 
     @logged_in
     def get_optimizer_stats(
